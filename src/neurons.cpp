@@ -1,10 +1,11 @@
 #include "neurons.h"
 #include "random.h"
 #include <cstddef>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
-using random::Random;
+using std::invalid_argument;
 using std::move;
 using std::vector;
 
@@ -16,7 +17,7 @@ vector<double> Layer::apply(const vector<double> &inputs,
   result.reserve(nextLayerSize);
   for (size_t i = 0; i < nextLayerSize; i++) {
     double value = 0;
-    for (size_t j = 0; j < neuronCount(); i++) {
+    for (size_t j = 0; j < neuronCount(); j++) {
       const Neuron &neuron = neurons[j];
       value += neuron.apply(inputs[j], i);
     }
@@ -28,6 +29,9 @@ vector<double> Network::apply(const vector<double> &inputs,
                               ActivationFunction &activationFunction) const {
   vector<double> temp = inputs;
   for (size_t i = 0; i < layerCount() - 1; i++) {
+    if (temp.size() != layers[i].neuronCount()) {
+      throw invalid_argument("Wrong number of arguments to neural layer");
+    }
     temp =
         layers[i].apply(temp, activationFunction, description.layerSize(i + 1));
   }

@@ -1,5 +1,5 @@
-#ifndef _NEURONS_H
-#define _NEURONS_H
+#ifndef NEURONS_NEURONS_H
+#define NEURONS_NEURONS_H
 
 #include "random.h"
 #include <cstddef>
@@ -19,8 +19,8 @@ class NetworkDescription {
 private:
   std::vector<size_t> layerDescriptions;
 
-  Neuron generateNeuron(random::Random &rand, size_t weightCount) const;
-  Layer generateLayer(random::Random &rand, size_t layerSize,
+  Neuron generateNeuron(Random &rand, size_t weightCount) const;
+  Layer generateLayer(Random &rand, size_t layerSize,
                       size_t nextLayerSize) const;
 
 public:
@@ -28,8 +28,9 @@ public:
       : layerDescriptions(std::move(layers)) {}
 
   size_t layerSize(size_t index) const { return layerDescriptions[index]; }
+  size_t layerCount() const { return layerDescriptions.size(); }
 
-  Network generateNetwork(random::Random &rand) const;
+  Network generateNetwork(Random &rand) const;
 };
 
 class Neuron {
@@ -79,7 +80,7 @@ public:
       : description(std::move(description)), layers(std::move(layers)) {}
 
   const Layer &getLayer(size_t index) const { return layers[index]; }
-  size_t layerCount() const { return layers.size(); }
+  size_t layerCount() const { return description.layerCount(); }
 
   size_t layerSize(size_t index) const { return description.layerSize(index); }
 

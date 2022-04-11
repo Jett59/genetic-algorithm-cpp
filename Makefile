@@ -1,4 +1,4 @@
-CXXFLAGS=-O3 -march=native -ffast-math
+CXXFLAGS=-std=c++17 -O3 -march=native -ffast-math -Wall -Wextra -pedantic -g
 
 SRCS=$(wildcard src/*.cpp)
 

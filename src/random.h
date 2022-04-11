@@ -1,10 +1,10 @@
-#ifndef _RANDOM_H
-#define _RANDOM_H
+#ifndef NEURONS_RANDOM_H
+#define NEURONS_RANDOM_H
 
-#include <cstddef>
+#include <cstdint>
 #include <random>
 
-namespace random {
+namespace neurons {
 class Random {
 private:
   static std::random_device seedGenerator;
@@ -16,9 +16,11 @@ private:
 public:
   Random() : engine(seedGenerator()) {}
 
-  uint_fast64_t getInt(uint_fast64_t range) { return intDistribution(engine) % range; }
+  uint_fast64_t getInt(uint_fast64_t range) {
+    return intDistribution(engine) % range;
+  }
   double getDouble() { return realDistribution(engine); }
 };
-} // namespace random
+} // namespace neurons
 
 #endif
