@@ -35,8 +35,8 @@ public:
 
 class Neuron {
 private:
-  const std::vector<double> weights;
-  const std::vector<double> biases;
+  std::vector<double> weights;
+  std::vector<double> biases;
 
 public:
   Neuron(const std::vector<double> weights, const std::vector<double> biases)
@@ -54,10 +54,12 @@ public:
   double apply(double input, size_t index) const {
     return input * weights[index] + biases[index];
   }
+
+  Neuron mutate(unsigned mutationRate, Random &rand) const;
 };
 class Layer {
 private:
-  const std::vector<Neuron> neurons;
+  std::vector<Neuron> neurons;
 
 public:
   Layer(const std::vector<Neuron> neurons) : neurons(std::move(neurons)) {}
@@ -69,11 +71,13 @@ public:
   std::vector<double> apply(const std::vector<double> &input,
                             ActivationFunction &activationFunction,
                             size_t nextLayerSize) const;
+
+  Layer mutate(unsigned mutationRate, Random &rand) const;
 };
 class Network {
 private:
-  const NetworkDescription description;
-  const std::vector<Layer> layers;
+  NetworkDescription description;
+  std::vector<Layer> layers;
 
 public:
   Network(const NetworkDescription description, const std::vector<Layer> layers)
@@ -87,6 +91,8 @@ public:
   // Returns the result of applying the inputs
   std::vector<double> apply(const std::vector<double> &inputs,
                             ActivationFunction &activationFunction) const;
+
+  Network mutate(unsigned mutationRate, Random &rand) const;
 };
 } // namespace neurons
 

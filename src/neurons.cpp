@@ -69,4 +69,31 @@ Network NetworkDescription::generateNetwork(Random &rand) const {
   }
   return Network(*this, layers);
 }
+
+Neuron Neuron::mutate(unsigned mutationRate, Random &rand) const {
+  vector<double> newWeights = weights;
+  vector<double> newBiases = biases;
+  bool changeWeight = rand.getInt(2) == 1;
+  if (changeWeight) {
+    newWeights[rand.getInt(newWeights.size())] +=
+        mutationRate * (rand.getDouble() * 2 - 1);
+  } else {
+    newBiases[rand.getInt(newBiases.size())] +=
+        mutationRate * (rand.getDouble() * 2 - 1);
+  }
+  return Neuron(move(newWeights), move(newBiases));
+}
+
+Layer Layer::mutate(unsigned mutationRate, Random &rand) const {
+  vector<Neuron> newNeurons = neurons;
+  Neuron &neuron = newNeurons[rand.getInt(newNeurons.size())];
+  neuron = neuron.mutate(mutationRate, rand);
+  return Layer(newNeurons);
+}
+Network Network::mutate(unsigned mutationRate, Random &rand) const {
+  vector<Layer> newLayers = layers;
+  Layer &layer = newLayers[rand.getInt(newLayers.size())];
+  layer = layer.mutate(mutationRate, rand);
+  return Network(description, newLayers);
+}
 } // namespace neurons
