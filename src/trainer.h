@@ -23,8 +23,9 @@ template <typename Network> struct ScoredNetwork {
 
 template <typename Network, typename Random, typename Input,
           double (*scorer)(const Input &,
-                           std::add_lvalue_reference_t<std::add_const_t<decltype(std::declval<Network>().apply(
-                               std::declval<Input>().networkInputs))>>),
+                           std::add_lvalue_reference_t<std::add_const_t<
+                               decltype(std::declval<Network>().apply(
+                                   std::declval<Input>().networkInputs))>>),
           typename InputIterator, size_t populationSize>
 class Trainer {
   std::deque<ScoredNetwork<Network>> networks;
@@ -39,7 +40,21 @@ public:
       network.randomize(rand);
       networks.push_back(score(network));
     }
-    std::make_heap(networks.begin(), networks.end());
+    std::sort(networks.begin(), networks.end());
+  }
+
+  void train(size_t iterations, size_t mutationRate) {
+    for (size_t i = 0; i < iterations; i++) {
+      for (size_t j = 0; j < populationSize / 2; j++) {
+        networks.pop_front();
+      }
+      for (size_t j = 0; j < populationSize / 2; j++) {
+        Network newNetwork = networks[j].network;
+        newNetwork.randomize(rand);
+        networks.push_back(score(newNetwork));
+      }
+      std::sort(networks.begin(), networks.end());
+    }
   }
 
   ScoredNetwork<Network> score(const Network &network) const {
@@ -53,7 +68,7 @@ public:
     return scoredNetwork;
   }
 
-  const ScoredNetwork<Network> &best() const { return networks.front(); }
+  const ScoredNetwork<Network> &best() const { return networks.back(); }
 };
 } // namespace genetic
 

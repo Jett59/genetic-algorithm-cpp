@@ -22,21 +22,27 @@ static std::vector<Input> readInputs(const std::string &fileName) {
     std::istringstream lineStream(line);
     std::string word;
     lineStream >> word;
-    bool correctlySpelled;
+    std::string correctlySpelled;
     lineStream >> correctlySpelled;
-    inputs.push_back({word, correctlySpelled});
+    inputs.push_back({word, correctlySpelled == "true"});
   }
   return inputs;
 }
 
 using DefaultNetwork = Network<DEFAULT_ACTIVATION, INPUT_LENGTH, 25, 1>;
 using DefaultTrainer = Trainer<DefaultNetwork, DefaultRandom, Input, &score,
-                               std::vector<Input>::iterator, 1024>;
+                              std::vector<Input>::iterator, 1024>;
 
 int main() {
   DefaultRandom rand;
   std::vector<Input> inputs = readInputs("inputs.txt");
   DefaultTrainer trainer(rand, inputs.begin(), inputs.end());
+  trainer.train(10, 2);
   std::cout << trainer.best().score << std::endl;
-  return 0;
+  for (size_t i = 0; i < 10; i++) {
+    const Input &input = inputs[i];
+    const NetworkInputs<1> &networkOutputs = trainer.best().network.apply(
+        input.networkInputs);
+    std::cout << input.word << " " << networkOutputs[0] << std::endl;
+  } return 0;
 }

@@ -22,9 +22,9 @@ struct Layer {
   template <typename Random> void randomize(Random &rand) {
     for (auto &neuron : neurons) {
       for (auto &weight : neuron.weights) {
-        weight = rand();
+        weight = rand() * 2 - 1;
       }
-      neuron.bias = rand();
+      neuron.bias = rand() * 2 - 1;
     }
   }
 
