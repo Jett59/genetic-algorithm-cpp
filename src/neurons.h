@@ -1,6 +1,7 @@
 #ifndef GENETIC_NEURONS_H
 #define GENETIC_NEURONS_H
 
+#include "random.h"
 #include <array>
 #include <cstddef>
 
@@ -18,10 +19,20 @@ template <ActivationFunction activationFunction, size_t neuronCount,
 struct Layer {
   Neuron<nextLayerNeuronCount> neurons[neuronCount];
 
-  auto apply(const NetworkInputs<neuronCount> &inputs) const {
+  template <typename Random> void randomize(Random &rand) {
+    for (auto &neuron : neurons) {
+      for (auto &weight : neuron.weights) {
+        weight = rand();
+      }
+      neuron.bias = rand();
+    }
+  }
+
+  NetworkInputs<nextLayerNeuronCount> apply(const NetworkInputs<neuronCount> &inputs) const {
     NetworkInputs<nextLayerNeuronCount> result;
+    std::fill(result.begin(), result.end(), 0);
     for (size_t neuronIndex = 0; neuronIndex < neuronCount; neuronIndex++) {
-    const Neuron<nextLayerNeuronCount>   &neuron = neurons[neuronIndex];
+      const Neuron<nextLayerNeuronCount> &neuron = neurons[neuronIndex];
       const double neuronValue = inputs[neuronIndex];
       for (size_t weightIndex = 0; weightIndex < nextLayerNeuronCount;
            weightIndex++) {
@@ -29,9 +40,8 @@ struct Layer {
             neuronValue * neuron.weights[weightIndex] + neuron.bias;
       }
     }
-    for (size_t resultIndex = 0; resultIndex < nextLayerNeuronCount;
-         resultIndex++) {
-      result[resultIndex] = activationFunction(result[resultIndex]);
+    for (auto &resultValue : result) {
+      resultValue = activationFunction(resultValue);
     }
     return result;
   }
@@ -39,6 +49,8 @@ struct Layer {
 template <ActivationFunction activationFunction, size_t...> struct Network;
 template <ActivationFunction activationFunction, size_t currentLayerSize>
 struct Network<activationFunction, currentLayerSize> {
+  template <typename Random> void randomize(Random &) {}
+
   auto apply(const NetworkInputs<currentLayerSize> &inputs) const {
     return inputs;
   }
@@ -49,6 +61,11 @@ struct Network<activationFunction, currentLayerSize, nextLayerSize,
                otherLayerSizes...> {
   Layer<activationFunction, currentLayerSize, nextLayerSize> layer;
   Network<activationFunction, nextLayerSize, otherLayerSizes...> nextLayers;
+
+  template <typename Random> void randomize(Random &rand) {
+    layer.randomize(rand);
+    nextLayers.randomize(rand);
+  }
 
   auto apply(const NetworkInputs<currentLayerSize> &inputs) const {
     return nextLayers.apply(layer.apply(inputs));
