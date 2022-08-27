@@ -28,7 +28,8 @@ struct Layer {
     }
   }
 
-  NetworkInputs<nextLayerNeuronCount> apply(const NetworkInputs<neuronCount> &inputs) const {
+  NetworkInputs<nextLayerNeuronCount>
+  apply(const NetworkInputs<neuronCount> &inputs) const {
     NetworkInputs<nextLayerNeuronCount> result;
     std::fill(result.begin(), result.end(), 0);
     for (size_t neuronIndex = 0; neuronIndex < neuronCount; neuronIndex++) {
@@ -45,11 +46,25 @@ struct Layer {
     }
     return result;
   }
+
+  template <typename Random> void mutate(Random &rand, double mutationRate) {
+    for (auto &neuron : neurons) {
+      for (auto &weight : neuron.weights) {
+        if (rand() < mutationRate) {
+          weight *= rand() * 4 - 2;
+        }
+      }
+      if (rand() < mutationRate) {
+        neuron.bias *= rand() * 4 - 2;
+      }
+    }
+  }
 };
 template <ActivationFunction activationFunction, size_t...> struct Network;
 template <ActivationFunction activationFunction, size_t currentLayerSize>
 struct Network<activationFunction, currentLayerSize> {
   template <typename Random> void randomize(Random &) {}
+  template <typename Random> void mutate(Random &, double) {}
 
   auto apply(const NetworkInputs<currentLayerSize> &inputs) const {
     return inputs;
@@ -65,6 +80,10 @@ struct Network<activationFunction, currentLayerSize, nextLayerSize,
   template <typename Random> void randomize(Random &rand) {
     layer.randomize(rand);
     nextLayers.randomize(rand);
+  }
+  template <typename Random> void mutate(Random &rand, double mutationRate) {
+    layer.mutate(rand, mutationRate);
+    nextLayers.mutate(rand, mutationRate);
   }
 
   auto apply(const NetworkInputs<currentLayerSize> &inputs) const {

@@ -3,6 +3,8 @@
 
 #include "neurons.h"
 #include "random.h"
+#include "workers.h"
+#include <algorithm>
 #include <deque>
 
 namespace genetic {
@@ -32,6 +34,14 @@ class Trainer {
   Random rand;
   InputIterator begin, end;
 
+  static double scoreNetwork(std::pair<const Network &, const Input &> &context) {
+    const auto &[network, input] = context;
+    return scorer(input, network.apply(input.networkInputs));
+  }
+
+  WorkerPool<std::pair<const Network &, const Input &>, double, scoreNetwork>
+      workerPool;
+
 public:
   Trainer(Random rand, InputIterator begin, InputIterator end)
       : rand(rand), begin(begin), end(end) {
@@ -43,27 +53,27 @@ public:
     std::sort(networks.begin(), networks.end());
   }
 
-  void train(size_t iterations, size_t mutationRate) {
+  void train(size_t iterations, double mutationRate) {
     for (size_t i = 0; i < iterations; i++) {
       for (size_t j = 0; j < populationSize / 2; j++) {
         networks.pop_front();
       }
       for (size_t j = 0; j < populationSize / 2; j++) {
         Network newNetwork = networks[j].network;
-        newNetwork.randomize(rand);
+        newNetwork.mutate(rand, mutationRate);
         networks.push_back(score(newNetwork));
       }
       std::sort(networks.begin(), networks.end());
     }
   }
 
-  ScoredNetwork<Network> score(const Network &network) const {
+  ScoredNetwork<Network> score(const Network &network) {
     ScoredNetwork<Network> scoredNetwork;
     scoredNetwork.network = network;
-    double score = 0;
-    for (auto input = begin; input != end; input++) {
-      score += scorer(*input, network.apply(input->networkInputs));
+    for (InputIterator input = begin; input != end; input++) {
+      workerPool.addJob(std::make_pair<const Network&, const Input&>(network, *input));
     }
+    double score = workerPool.waitForJobs();
     scoredNetwork.score = score / std::distance(begin, end);
     return scoredNetwork;
   }

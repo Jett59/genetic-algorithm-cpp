@@ -7,7 +7,7 @@
 #include <iostream>
 
 namespace genetic {
-static constexpr ActivationFunction DEFAULT_ACTIVATION = [](double x) {
+static constexpr double DEFAULT_ACTIVATION(double x) {
   return (x / (abs(x) + 1) + 1) / 2;
 };
 }
