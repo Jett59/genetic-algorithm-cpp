@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Microsoft compiler output
+*.ilk
+*.pdb
+
 # Compiled Object files
 *.slo
 *.lo
