@@ -37,14 +37,15 @@ int main() {
   DefaultRandom rand;
   std::vector<Input> inputs = readInputs("inputs.txt");
   std::cout << "Initializing the trainer..." << std::endl;
-  DefaultTrainer trainer(rand, inputs.begin(), inputs.end());
+  std::unique_ptr<DefaultTrainer> trainer = std::make_unique<DefaultTrainer>(rand, inputs.begin(), inputs.end());
   std::cout << "Beginning training..." << std::endl;
-  trainer.train(128, 0.02);
-  std::cout << trainer.best().score << std::endl;
+  trainer->train(128, 0.02);
+  std::cout << trainer->best().score << std::endl;
+  std::cout << trainer->score(trainer->best().network).score << std::endl;
   for (size_t i = 0; i < 10; i++) {
     const Input &input = inputs[i];
     const NetworkInputs<1> &networkOutputs =
-        trainer.best().network.apply(input.networkInputs);
+        trainer->best().network.apply(input.networkInputs);
     std::cout << (input.correctlySpelled ? "true" : "false") << " " << networkOutputs[0] << std::endl;
   }
   return 0;
