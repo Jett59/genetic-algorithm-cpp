@@ -46,7 +46,8 @@ int main() {
     const Input &input = inputs[i];
     const NetworkInputs<1> &networkOutputs =
         trainer->best().network.apply(input.networkInputs);
-    std::cout << (input.correctlySpelled ? "true" : "false") << " " << networkOutputs[0] << std::endl;
+    std::cout << input.word << " " << (input.correctlySpelled ? "true" : "false") << " " << networkOutputs[0] << std::endl;
   }
+  std::cout << correctlyVsNotCount << std::endl;
   return 0;
 }
