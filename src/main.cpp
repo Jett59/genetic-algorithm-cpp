@@ -30,9 +30,9 @@ static std::vector<Input> readInputs(const std::string &fileName) {
   return inputs;
 }
 
-using DefaultNetwork = Network<DEFAULT_ACTIVATION, INPUT_LENGTH, 25, 1>;
+using DefaultNetwork = Network<DEFAULT_ACTIVATION, INPUT_LENGTH, 40, 40, 1>;
 using DefaultTrainer = Trainer<DefaultNetwork, DefaultRandom, Input, &score,
-                               std::vector<Input>::iterator, 1024>;
+                               std::vector<Input>::iterator, 512>;
 
 int main() {
   DefaultRandom rand;
@@ -48,7 +48,7 @@ int main() {
     std::cout << "Stopping soon..." << std::endl;
   });
   while (!interrupted) {
-    trainer->train(8, 0.02);
+    trainer->train(16, 0.2);
     std::cout << trainer->best().score << std::endl;
   }
   for (size_t i = 0; i < 10; i++) {

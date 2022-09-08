@@ -13,6 +13,7 @@ template <size_t len> using NetworkInputs = std::array<double, len>;
 template <size_t weightCount> struct Neuron {
   double weights[weightCount];
   double bias;
+  double threshold;
 };
 template <ActivationFunction activationFunction, size_t neuronCount,
           size_t nextLayerNeuronCount>
@@ -25,6 +26,7 @@ struct Layer {
         weight = rand() * 2 - 1;
       }
       neuron.bias = rand() * 2 - 1;
+      neuron.threshold = rand() * 2 - 1;
     }
   }
 
@@ -35,10 +37,12 @@ struct Layer {
     for (size_t neuronIndex = 0; neuronIndex < neuronCount; neuronIndex++) {
       const Neuron<nextLayerNeuronCount> &neuron = neurons[neuronIndex];
       const double neuronValue = inputs[neuronIndex];
-      for (size_t weightIndex = 0; weightIndex < nextLayerNeuronCount;
-           weightIndex++) {
-        result[weightIndex] +=
-            neuronValue * neuron.weights[weightIndex] + neuron.bias;
+      if (neuronValue >= neuron.threshold) {
+        for (size_t weightIndex = 0; weightIndex < nextLayerNeuronCount;
+             weightIndex++) {
+          result[weightIndex] +=
+              neuronValue * neuron.weights[weightIndex] + neuron.bias;
+        }
       }
     }
     for (auto &resultValue : result) {
@@ -56,6 +60,9 @@ struct Layer {
       }
       if (rand() < mutationRate) {
         neuron.bias *= rand() * 4 - 2;
+      }
+      if (rand() < mutationRate) {
+        neuron.threshold *= rand() * 4 - 2;
       }
     }
   }
