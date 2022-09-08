@@ -1,9 +1,9 @@
-CXXFLAGS=-std=c++17 -O3 -march=native -ffast-math -Wall -Wextra -pedantic -g
+CXXFLAGS=-std=c++20 -Og -march=native -ffast-math -Wall -Wextra -pedantic -g -pthread
 
 SRCS=$(wildcard src/*.cpp)
 
-a.out: $(SRCS)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $^ -o $@
+a.out: $(SRCS) $(wildcard src/*.h) Makefile
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(SRCS) -o $@
 
 clean:
 	rm -f a.out

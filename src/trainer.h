@@ -34,13 +34,12 @@ class Trainer {
   Random rand;
   InputIterator begin, end;
 
-  static double scoreNetwork(std::pair<const Network &, const Input &> &context) {
-    const auto &[network, input] = context;
+  static double
+  scoreNetwork(const Input &input, const Network &network) {
     return scorer(input, network.apply(input.networkInputs));
   }
 
-  WorkerPool<std::pair<const Network &, const Input &>, double, scoreNetwork>
-      workerPool;
+  WorkerPool<Input, Network, double, scoreNetwork> workerPool;
 
 public:
   Trainer(Random rand, InputIterator begin, InputIterator end)
@@ -70,10 +69,7 @@ public:
   ScoredNetwork<Network> score(const Network &network) {
     ScoredNetwork<Network> scoredNetwork;
     scoredNetwork.network = network;
-    for (InputIterator input = begin; input != end; input++) {
-      workerPool.addJob(std::make_pair<const Network&, const Input&>(network, *input));
-    }
-    double score = workerPool.waitForJobs();
+    double score = workerPool(begin, end, network);
     scoredNetwork.score = score / std::distance(begin, end);
     return scoredNetwork;
   }
