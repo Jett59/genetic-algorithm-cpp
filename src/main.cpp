@@ -1,3 +1,4 @@
+#include <csignal>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -37,15 +38,25 @@ int main() {
   DefaultRandom rand;
   std::vector<Input> inputs = readInputs("inputs.txt");
   std::cout << "Initializing the trainer..." << std::endl;
-  std::unique_ptr<DefaultTrainer> trainer = std::make_unique<DefaultTrainer>(rand, inputs.begin(), inputs.end());
+  std::unique_ptr<DefaultTrainer> trainer =
+      std::make_unique<DefaultTrainer>(rand, inputs.begin(), inputs.end());
   std::cout << "Beginning training..." << std::endl;
-  trainer->train(128, 0.02);
-  std::cout << trainer->best().score << std::endl;
+  static volatile bool interrupted =
+      false; // Static to allow use in the signal handler.
+  signal(SIGINT, [](int) {
+    interrupted = true;
+    std::cout << "Stopping soon..." << std::endl;
+  });
+  while (!interrupted) {
+    trainer->train(8, 0.02);
+    std::cout << trainer->best().score << std::endl;
+  }
   for (size_t i = 0; i < 10; i++) {
     const Input &input = inputs[i];
     const NetworkInputs<1> &networkOutputs =
         trainer->best().network.apply(input.networkInputs);
-    std::cout << (input.correctlySpelled ? "true" : "false") << " " << networkOutputs[0] << std::endl;
+    std::cout << (input.correctlySpelled ? "true" : "false") << " "
+              << networkOutputs[0] << std::endl;
   }
   return 0;
 }

@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++20 -Og -march=native -ffast-math -Wall -Wextra -pedantic -g -pthread
+CXXFLAGS=-std=c++20 -Ofast -march=native -ffast-math -Wall -Wextra -pedantic -g -pthread
 
 SRCS=$(wildcard src/*.cpp)
 
