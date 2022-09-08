@@ -2,8 +2,10 @@
 #define GENETIC_RING_BUFFER_H
 
 #include "cpu.h"
+#include "spinlock.h"
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <optional>
 
 namespace genetic {

@@ -10,10 +10,14 @@
 #include <vector>
 
 namespace genetic {
-auto add(auto a, auto b) { return a + b; }
+template <typename Input, typename Output>
+void add(std::atomic<Output> &sum, Output additional) {
+  sum += additional;
+}
 
 template <typename Input, typename Output, Output (*handler)(Input &),
-          Output (*collector)(Output, Output) = add, size_t max = 65536>
+          void (*collector)(std::atomic<Output> &, Output) = add<Input, Output>,
+          size_t max = 65536>
 struct WorkerPool {
   RingBuffer<Input, max> jobs;
   std::atomic<Output> output;
@@ -26,19 +30,19 @@ struct WorkerPool {
     for (size_t i = 0; i < numThreads; i++) {
       threads.push_back(std::thread(
           [](WorkerPool *pool) {
-            Output ourTotalOutput{};
+            std::atomic<Output> ourTotalOutput;
             size_t completedJobs = 0;
             while (true) {
               auto initialReadAttempt = pool->jobs.tryRead();
               if (!initialReadAttempt) {
-                pool->output = collector(pool->output, ourTotalOutput);
+                collector(pool->output, ourTotalOutput);
                 pool->pendingJobs -= completedJobs;
                 ourTotalOutput = 0;
                 completedJobs = 0;
               }
               auto job =
                   initialReadAttempt ? *initialReadAttempt : pool->jobs.read();
-              ourTotalOutput = collector(ourTotalOutput, handler(job));
+              collector(ourTotalOutput, handler(job));
               completedJobs++;
             }
           },
@@ -53,17 +57,16 @@ struct WorkerPool {
   WorkerPool &operator=(WorkerPool &&) = default;
 
   void addJob(const Input &input) {
-    pendingJobs++;
     jobs.write(input);
+    pendingJobs++;
   }
 
   Output waitForJobs() {
-    output = Output{};
     while (pendingJobs) {
       std::this_thread::yield();
     }
     Output result = output;
-    output = Output{};
+    output = {};
     return result;
   }
 };
