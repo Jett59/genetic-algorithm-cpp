@@ -79,7 +79,7 @@ struct WorkerPool {
   WorkerPool &operator=(WorkerPool &&) = default;
 
   template <typename Iter>
-  Output operator()(Iter begin, Iter end, const Context &context) {
+  void operator()(Iter begin, Iter end, const Context &context) {
     size_t numJobs = std::distance<Iter>(begin, end);
     size_t jobsPerWorker = numJobs / numWorkers;
     size_t remainingJobs = numJobs % numWorkers;
@@ -93,10 +93,12 @@ struct WorkerPool {
       workers[i](begin, begin + jobs);
       begin += jobs;
     }
+  }
+
+  Output await() {
     Output output{};
     for (size_t i = 0; i < numWorkers; i++) {
-      auto &worker = workers[i];
-      collector(output, worker.await());
+      collector(output, workers[i].await());
     }
     return output;
   }

@@ -48,7 +48,10 @@ public:
     for (size_t i = 0; i < populationSize; i++) {
       Network network;
       network.randomize(rand);
-      networks.push_back(score(network));
+      auto scoredNetwork = createScoredNetwork(std::move(network));
+      workerPool(begin, end, scoredNetwork.network);
+      scoredNetwork.score = workerPool.await() / std::distance(begin, end);
+      networks.push_back(std::move(scoredNetwork));
     }
     std::sort(networks.begin(), networks.end());
   }
@@ -57,20 +60,26 @@ public:
     for (size_t i = 0; i < iterations; i++) {
       for (size_t j = 0; j < populationSize / 2; j++) {
         auto &scoredNetwork = networks[j + populationSize / 2];
-        scoredNetwork.age += 0.005;
+        scoredNetwork.age += 0.001;
         auto newNetwork = scoredNetwork.network;
         newNetwork.mutate(rand, mutationRate);
-        networks[j] = score(std::move(newNetwork));
+        if (j > 0) {
+          networks[j - 1].score =
+              workerPool.await() / std::distance(begin, end);
+        }
+        networks[j] = createScoredNetwork(std::move(newNetwork));
+        workerPool(begin, end, networks[j].network);
       }
+      networks[populationSize / 2 - 1].score =
+          workerPool.await() / std::distance(begin, end);
       std::sort(networks.begin(), networks.end());
     }
   }
 
-  ScoredNetwork<Network> score(Network network) {
+  ScoredNetwork<Network> createScoredNetwork(Network network) {
     ScoredNetwork<Network> scoredNetwork;
     scoredNetwork.network = std::move(network);
-    double score = workerPool(begin, end, scoredNetwork.network);
-    scoredNetwork.score = score / std::distance(begin, end);
+    scoredNetwork.score = 0;
     scoredNetwork.age = 1;
     return scoredNetwork;
   }

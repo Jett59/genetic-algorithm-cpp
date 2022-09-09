@@ -22,9 +22,9 @@ static inline double score(const Input &input,
                            const NetworkInputs<1> &networkOutputs) {
   double networkOutput = networkOutputs[0];
   if (input.correctlySpelled) {
-    return 1 - networkOutput;
-  } else {
     return networkOutput;
+  } else {
+    return 1 - networkOutput;
   }
 }
 } // namespace genetic
