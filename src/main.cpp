@@ -34,12 +34,19 @@ using DefaultNetwork = Network<DEFAULT_ACTIVATION, INPUT_LENGTH, 50, 50, 50, 1>;
 using DefaultTrainer = Trainer<DefaultNetwork, DefaultRandom, Input, &score,
                                std::vector<Input>::iterator, 512>;
 
-int main() {
+int main(int argc, char **argv) {
   DefaultRandom rand;
   std::vector<Input> inputs = readInputs("inputs.txt");
   std::cout << "Initializing the trainer..." << std::endl;
   std::unique_ptr<DefaultTrainer> trainer =
       std::make_unique<DefaultTrainer>(rand, inputs.begin(), inputs.end());
+      if (argc > 1) {
+        DefaultNetwork network;
+        std::ifstream input(argv[1], std::ios::binary);
+        input >> network;
+        input.close();
+        trainer->insertNetwork(network);
+      }
   std::cout << "Beginning training..." << std::endl;
   static volatile bool interrupted =
       false; // Static to allow use in the signal handler.
@@ -48,15 +55,35 @@ int main() {
     std::cout << "Stopping soon..." << std::endl;
   });
   while (!interrupted) {
-    trainer->train(16, 0.01);
+    trainer->train(16, 0.0001);
     std::cout << trainer->best().score << std::endl;
   }
-  for (size_t i = 0; i < 10; i++) {
-    const Input &input = inputs[i];
+  double accuracy = 0;
+  for (const auto &input : inputs) {
     const NetworkInputs<1> &networkOutputs =
         trainer->best().network.apply(input.networkInputs);
-    std::cout << (input.correctlySpelled ? "true" : "false") << " "
-              << networkOutputs[0] << std::endl;
+    double networkOutput = networkOutputs[0];
+    if (networkOutput >= 0.5 == input.correctlySpelled) {
+      accuracy++;
+    }
   }
+  accuracy /= inputs.size();
+  std::cout << "Accuracy: " << accuracy << std::endl;
+  // Start an interractive session.
+  std::cout << "Your turn:" << std::endl;
+  while (true) {
+    std::string word;
+    std::cin >> word;
+    if (word == "quit") {
+      break;
+    }
+    Input input(word, false);
+    NetworkInputs<1> networkOutputs =
+        trainer->best().network.apply(input.networkInputs);
+    double networkOutput = networkOutputs[0];
+    std::cout << (networkOutput > 0.5 ? "true" : "false") << std::endl;
+  }
+  std::ofstream output("out.gnt", std::ios::binary);
+  output << trainer->best().network;
   return 0;
 }

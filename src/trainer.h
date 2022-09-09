@@ -62,6 +62,7 @@ public:
         auto &scoredNetwork = networks[j + populationSize / 2];
         scoredNetwork.age += 0.001;
         auto newNetwork = scoredNetwork.network;
+        newNetwork.combineWith(rand, networks[populationSize - j % 16 - 1].network);
         newNetwork.mutate(rand, mutationRate);
         if (j > 0) {
           networks[j - 1].score =
@@ -83,6 +84,14 @@ public:
     scoredNetwork.age = 1;
     return scoredNetwork;
   }
+
+void insertNetwork(Network network) {
+  auto scoredNetwork = createScoredNetwork(std::move(network));
+  workerPool(begin, end, scoredNetwork.network);
+  scoredNetwork.score = workerPool.await() / std::distance(begin, end);
+  networks[0] = std::move(scoredNetwork);
+  std::sort(networks.begin(), networks.end());
+}
 
   const ScoredNetwork<Network> &best() const {
     const ScoredNetwork<Network> *best = nullptr;
