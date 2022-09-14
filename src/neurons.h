@@ -23,7 +23,7 @@ struct Layer {
   void combineWith(Random &rand, const Layer<activationFunction, neuronCount,
                                              nextLayerNeuronCount> &other) {
     for (size_t i = 0; i < neuronCount; i++) {
-      for (size_t j = 0; j < nextLayerNeuronCount; j++) {
+      for (size_t j = 0; j < neuronCount; j++) {
         neurons[i].weights[j] =
             rand() < 0.5 ? neurons[i].weights[j] : other.neurons[i].weights[j];
       }
@@ -124,9 +124,10 @@ operator<<(std::ostream &os,
   os << network.layer << network.nextLayers;
   return os;
 }
-template<genetic::ActivationFunction activationFunction, size_t lastLayerSize>
-std::ostream &operator<<(std::ostream &os,
-                         const genetic::Network<activationFunction, lastLayerSize> &network) {
+template <genetic::ActivationFunction activationFunction, size_t lastLayerSize>
+std::ostream &
+operator<<(std::ostream &os,
+           const genetic::Network<activationFunction, lastLayerSize> &network) {
   return os;
 }
 template <genetic::ActivationFunction activationFunction, size_t... layerSizes>
@@ -136,9 +137,10 @@ operator>>(std::istream &is,
   is >> network.layer >> network.nextLayers;
   return is;
 }
-template<genetic::ActivationFunction activationFunction, size_t lastLayerSize>
-std::istream &operator>>(std::istream &is,
-                         genetic::Network<activationFunction, lastLayerSize> &network) {
+template <genetic::ActivationFunction activationFunction, size_t lastLayerSize>
+std::istream &
+operator>>(std::istream &is,
+           genetic::Network<activationFunction, lastLayerSize> &network) {
   return is;
 }
 
